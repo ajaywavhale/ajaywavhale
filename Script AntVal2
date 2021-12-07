@@ -1,0 +1,370 @@
+import csv
+import re
+from datetime import datetime
+from collections import OrderedDict
+xnb = re.compile('.*XNB.*')
+ibs = re.compile('.*IBS.*')
+bsa = re.compile('.*2300 BSA.*')
+boom = re.compile('.*boom.*')
+bsa1 = re.compile('.*850 BSA.*')
+multi = re.compile('.*MB.*')
+pb = re.compile('.*PB.*')
+sb23 = re.compile('.*2300 SB.*')
+sb18 = re.compile('.*1800 SB.*')
+sb8h = re.compile('.*High.*')
+sb8l = re.compile('.*Low.*')
+sb8 = re.compile('.*850 SB.*')
+today = datetime.today().strftime('%y-%m-%d')
+rawout ="Detail_Raw_Data_Template "+today+'.csv'
+tempout  ="Summary Template "+today+'.csv'
+
+print "Generating formatted integrated file..........."
+
+with open ("Integrated.csv","rb") as integrated,open("reqdint.csv","wb")as new:
+    reader = csv.reader(integrated)
+    writer = csv.writer(new)
+    i=0
+    for row in reader:
+        if i>0 and row[14]!="No Data":
+            mysum=int(row[14])+int(row[15])+int(row[16])
+            intcol = [row[0],row[22],row[23],row[24],row[46],row[47],row[48]]
+            intcol.append(mysum)
+            writer.writerow(intcol)
+        if i==0:
+            del row[1:22]
+            del row[4:25]
+            del row[7:]
+            row.append("RRH count")
+            writer.writerow(row)
+        i=i+1
+        
+print "integrated file generation complete started merging files........"
+
+
+
+filenames = "t1.csv" ,"t2.csv","t3.csv","reqdint.csv","B_ranking.csv","5G.csv"
+data = OrderedDict()
+fieldnames = []
+for x in filenames:
+    with open(x,"rb") as fp:
+        reader = csv.DictReader(fp)
+        fieldnames.extend(reader.fieldnames)
+        for row in reader :
+            data.setdefault(row["sap_id"],{}).update(row)
+fieldnames = list(OrderedDict.fromkeys(fieldnames))
+with open("log_merging.csv","wb") as fp:
+    writer =  csv.writer(fp)
+    writer.writerow(fieldnames)
+    for row in data.itervalues():
+        if len(row.get("Tower Type",{}))>2 :
+            writer.writerow([row.get(field,'')for field in fieldnames])
+            
+print "merging done succeffully!!!!!!!!"
+
+print "audit logic started......."
+with open('log_merging.csv','rb') as fp,open(rawout,'wb')as corrected,open(tempout,"wb") as finalt:
+    reader = csv.reader(fp)
+    writer = csv.writer(corrected)
+    temp_writer = csv.writer(finalt)
+    changea ="No change"
+    changeb ="No change"
+    changeg ="No change"
+    change8a ="No change"
+    change8b ="No change"
+    change8g ="No change"
+    for row in reader:
+        if row[0]=="sap_id":
+            row.append("Site Category")
+            newcol = ["final Alpha","final Beta","final Gamma","Changed_2300Alpha","Changed_2300Beta","Changed_2300Gamma","Changed_850Alpha","Changed_850Beta","Changed_850Gamma"]
+            countcol =["Count 2300 BSA","Count T-Boom","Count 850 BSA","Count MB","Count PB","Count 2300 SB","Count 1800 SB","Count 850 High Gain","Count 850 Low Gain","Count 850 SB High+Low","Total antenna count","Change Flag"]
+            row = row + newcol + countcol
+            con1=[row[0],row[1],row[35],row[45],row[46],row[47],row[48],row[49],row[50],row[51],row[54],row[55],row[32]]
+            con2=[row[8],row[9],row[10],row[11],row[12],row[13],row[17],row[18],row[19],row[23],row[24],row[25],row[20],row[21],row[22],row[34]]
+            temp_writer.writerow(con1+con2)
+            del row[8:14]
+            del row[11:14]
+            del row[14:17]
+            writer.writerow(row)
+            continue
+        if row[0][len(row[0])-4] == '6':
+            row.append("RP1")
+        elif row[0][len(row[0])-4] in ['0','1','2','3','4','5','7','8','9']:
+            row.append("P1")
+        else :
+            row.append("IP colo")
+            
+    
+        
+        
+        if row[29]=="Y" and row[20]!="850 BSA":
+            org8a = row[20]
+            row[20]="850 BSA"
+            change8a = org8a +" changed to 850 BSA"
+            
+          
+            
+            
+        
+        if row[26]=="Y" and row[5]!= "2300 Tboom" and row[2]!="2300 BSA":
+            orga = row[2]            
+            row[2]="2300 BSA"
+            changea = orga+" changed to 2300 BSA"
+            
+         
+            
+            
+        
+        if row[26]=="N" and row[2]=="2300 BSA":
+            if row[14]=="1800 SB":
+                orga = row[2]
+                row[2]="2300 SB"
+                changea = orga +" changed to 2300 SB"
+                
+              
+                
+                
+               
+                
+            if row[14]=="MB" or row[14]=="PB":
+                orga = row[2]
+                row[2]=row[14]                
+                changea = orga + " changed to " + row[14]
+                
+               
+                
+                
+                               
+            else:
+                if row[20]=="PB":
+                    orga= row[2]
+                    changea = orga +" changed to PB"
+                    row[2]="PB"
+                    
+                   
+                    
+                else :
+                    orga=row[2]
+                    cahngea = orga +" changed to 2300 SB"
+                    row[2]="2300 SB"
+                    
+                    
+                    
+
+
+
+                    
+        if row[30]=="Y" and row[21]!="850 BSA":
+            
+            org8b = row[21]
+            row[21]="850 BSA"
+            change8b = org8b +" changed to 850 BSA"
+            
+            
+        if row[27]=="Y" and row[6]!= "2300 Tboom" and row[3]!="2300 BSA":
+            orgb = row[3]
+            row[3]="2300 BSA"
+            changeb = orgb +" changed to 2300 BSA"
+            
+           
+            
+        if row[27]=="N" and row[3]=="2300 BSA":
+            if row[15]=="1800 SB":                
+                orgb =row[3]
+                row[3]="2300 SB"
+                cahngeb = orgb +" changed to 2300 SB"
+                
+                
+                
+            elif row[15]=="MB" or row[15]=="PB" :
+                orgb=row[3]
+                row[3]=row[15]
+                changeb = orgb +" changed to "+row[15]
+                
+                
+                                
+            else:
+                if row[21]=="PB" :
+                    orgb = row[3]
+                    row[3]="PB"
+                    changeb = orgb +" changed to PB"
+                    
+                    
+                    
+                else :
+                    orgb = row[3]
+                    row[3]="2300 SB"
+                    changeb = orgb +" changed to 2300 SB"
+                    
+                   
+        
+        
+        if row[31]=="Y" and row[22]!="850 BSA":
+            org8g =row[22]
+            row[22]="850 BSA"
+            change8g = org8g +" changed to 850 BSA"
+            
+            
+
+        if row[28]=="Y" and row[7]!= "2300 Tboom" and row[4]!="2300 BSA":
+            orgg = row[4]
+            row[4]="2300 BSA"
+            changeg = orgg +" changed to 2300 BSA"
+            
+            
+            
+        if row[28]=="N" and row[4]=="2300 BSA":
+            if row[16]=="1800 SB":
+                orgg = row[4]
+                row[4]="2300 SB"
+                changeg = orgg +" changed to 2300 SB"
+                
+                
+                
+            elif row[16]=="MB" or row[16]=="PB":
+                orgg = row[4]
+                row[4]=row[16] 
+                changeg = orgg +" changed to "+row[16]
+                
+                
+                               
+            else:
+                if row[22]=="PB":
+                    orgg = row[4]
+                    row[4]="PB"
+                    changeg = orgg +" changed to PB"
+                    
+                   
+                    
+                else :
+                    orgg = row[4]
+                    row[4]="2300 SB"
+                    changeg = orgg +" changed to 2300 SB"
+                    
+                    
+
+        
+            
+            
+        if row[29]=="N" and row[20]=="850 BSA":
+            if row[2]=="PB":
+                org8a =row[20]
+                row[20]="PB"
+                change8a = org8a +" changeed to PB"
+                
+                
+                
+            else:
+                if row[33]=="Town887":
+                    org8a =row[20]
+                    row[20]="850 SB Low Gain"
+                    change8a = org8a +" changed to 850 SB Low Gain"
+                    
+                    
+                    
+                else:
+                    org8a =row[20]
+                    row[20]="850 SB High Gain"
+                    change8a = org8a +" changed to 850 SB High Gain"
+                    
+                    
+     
+            
+        if row[30]=="N" and row[21]=="850 BSA":
+            if row[3]=="PB":
+                org8b =row[21]
+                row[21]="PB"
+                change8b = org8b +" changed to PB"
+                
+               
+                
+            else:
+                if row[33]=="Town887":
+                    org8b =row[21]
+                    row[21]="850 SB Low Gain"
+                    change8b = org8b +" changed to 850 SB Low Gain"
+                    
+                    
+                    
+                else:
+                    org8b =row[21]
+                    row[21]="850 SB High Gain"
+                    change8b = org8b +" changed to 850 SB High Gain"
+                    
+                    
+
+        
+            
+            
+        if row[31]=="N" and row[22]=="850 BSA":
+            if row[4]=="PB":
+                org8g =row[22]
+                row[22]="PB"
+                change8g = org8g +" changeed to PB"
+                
+                
+                
+            else:
+                if row[33]=="Town887":
+                    org8g =row[22]
+                    row[22]="850 SB Low Gain"
+                    change8g = org8g +" changed to 850 SB Low Gain"
+                    
+                    
+                    
+                else:
+                    org8g =row[22]
+                    row[22]="850 SB High Gain"
+                    change8g = org8g +" changed to 850 SB High Gain"
+                    
+                    
+                   
+        else:            
+            pass        
+        falpha =row[2]+"+"+row[14]+"+"+row[20]
+        fbeta = row[3]+"+"+row[15]+"+"+row[21]
+        fgamma =row[4]+"+"+row[16]+"+"+row[22]
+        ncol = [falpha,fbeta,fgamma,changea,changeb,changeg,change8a,change8b,change8g]
+        row = row + ncol
+        cbsa =len(re.findall(bsa,row[36]))+len(re.findall(bsa,row[37]))+len(re.findall(bsa,row[38]))
+        cboom =len(re.findall(boom,row[5]))+len(re.findall(boom,row[6]))+len(re.findall(boom,row[7]))
+        c8bsa=len(re.findall(bsa1,row[36]))+len(re.findall(bsa1,row[37]))+len(re.findall(bsa1,row[38]))
+        cmb=len(re.findall(multi,row[36]))+len(re.findall(multi,row[37]))+len(re.findall(multi,row[38]))
+        cpb=len(re.findall(pb,row[36]))+len(re.findall(pb,row[37]))+len(re.findall(pb,row[38]))
+        csb23=len(re.findall(sb23,row[36]))+len(re.findall(sb23,row[37]))+len(re.findall(sb23,row[38]))
+        csb18=len(re.findall(sb18,row[36]))+len(re.findall(sb18,row[37]))+len(re.findall(sb18,row[38]))
+        csbh85=len(re.findall(sb8h,row[36]))+len(re.findall(sb8h,row[37]))+len(re.findall(sb8h,row[38]))
+        csbl85=len(re.findall(sb8l,row[36]))+len(re.findall(sb8l,row[37]))+len(re.findall(sb8l,row[38]))
+        csb85=len(re.findall(sb8,row[36]))+len(re.findall(sb8,row[37]))+len(re.findall(sb8,row[38]))
+        ncountcol = [cbsa,cboom,c8bsa,cmb,cpb,csb23,csb18,csbh85,csbl85,csb85]
+        row = row + ncountcol
+        antcount=int(row[45])+int(row[46])+int(row[47])+int(row[48])+int(row[49])+int(row[50])+int(row[51])+int(row[52])+int(row[53])
+        row.append(antcount)
+        
+        if changea !="No change" or changeb !="No change" or changeg !="No change" or change8a !="No change" or change8b !="No change" or change8g !="No change":
+            row.append("Antenna Changed")
+        else: row.append("No Change")
+        changea ="No change"
+        changeb ="No change"
+        changeg ="No change"
+        change8a ="No change"
+        change8b ="No change"
+        change8g ="No change"
+        tempa = row[20]
+        tempb = row[21]
+        tempg = row[22]
+        if row[20] != "850 SB Low Gain" and row[20] != "850 SB High Gain":
+            tempa = "-"
+        if row[21] != "850 SB Low Gain" and row[21] != "850 SB High Gain":
+            tempb = "-"
+        if row[22] != "850 SB Low Gain" and row[22] != "850 SB High Gain":
+            tempg = "-"        
+          
+        con1=[row[0],row[1],row[35],row[45],row[46],row[47],row[48],row[49],row[50],row[51],row[54],row[55],row[32]]        
+        con2=[row[8],row[9],row[10],row[11],row[12],row[13],row[17],row[18],row[19],row[23],row[24],row[25],tempa,tempb,tempg,row[34]]
+        if row[0][10:13]!="XNB" and row[0][10:13]!="IBS":
+            temp_writer.writerow(con1+con2)
+        del row[8:14]
+        del row[11:14]
+        del row[14:17]
+        if row[0][10:13]!="XNB" and row[0][10:13]!="IBS":
+            writer.writerow(row)   
