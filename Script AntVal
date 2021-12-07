@@ -1,0 +1,266 @@
+import csv
+import re
+multi = re.compile('.*MULTI.*')
+mb1 = re.compile(re.escape('ODI2-065R17CL-G'))
+mb2 = re.compile(re.escape('MB-4U84Q8X33VD-01'))
+pb = re.compile('.*PB.*')
+pb1 = re.compile(re.escape('12P65T2D2E-1517DD'))
+pb2 = re.compile(re.escape('ODI-065R15HB17CCLL-G'))
+bsa = re.compile('.*BSA.*')
+bisec = re.compile('.*Bi.*')
+bsa2 = re.compile(re.escape('MB-2B6X30V-10'))
+bsa3 = re.compile(re.escape('4P35LB-18D'))
+bsa4 = re.compile(re.escape('4P35LS-17D'))
+boom = re.compile('.*Boom.*')
+NA1 = re.compile('.*NULL.*')
+NA2 = re.compile('.*NA.*')
+hg1 = re.compile(re.escape('6820370( 850 LB 17dbi)'))
+hg2 = re.compile(re.escape('ODDI-032R17B02-G'))
+hg3 = re.compile(re.escape('ODI-065R17HB-G'))
+hg4 = re.compile(re.escape('S-Wave 0609-65-18DV10C-F(850 TYPE-1)'))
+hg5 = re.compile(re.escape('S-Wave 0609-65-18DV10CI-F (iRET)'))
+hg6 = re.compile(re.escape('XDGWL-C-17-65i-iVT (iRET)'))
+hg7 = re.compile(re.escape('XDGWL-C-17-65i-VT(850 TYPE-1)'))
+lg1 = re.compile(re.escape('S-Wave 0609-65-15DV2/14C-F(850 TYPE-5)'))
+lg2 = re.compile(re.escape('S-Wave 0609-65-15DV2/14CI-F (iRET)'))
+lg3 = re.compile(re.escape('XDGWL-C-14-65i-iVT (iRET)'))
+lg4 = re.compile(re.escape('XDGWL-C-14-65i-VT(850 TYPE-5)'))
+
+
+with open('2300.csv','r')as band1,open ('1800.csv','r') as band2,open ('850.csv','r') as band3:
+    reader1 = csv.DictReader(band1)
+    reader2 = csv.DictReader(band2)
+    reader3 = csv.DictReader(band3)
+    
+    for row in reader1:
+        header1 = reader1.fieldnames        
+        del header1[14:len(header1)]
+        header1[1]="Tower Type"
+        header1[2]="2300alpha"
+        header1[3]="2300beta"
+        header1[4]="2300gamma"
+        header1[5]="2300alpha addition"
+        header1[6]="2300beta addition"
+        header1[7]="2300gamma addition"
+        header1[8]="2300 ALPHA_ANTENNA_HIGHT"
+        header1[9]="2300 BETA_ANTENNA_HIGHT"
+        header1[10]="2300 GAMMA_ANTENNA_HIGHT"
+        header1[11]="ALPHA_AZIMUTH"
+        header1[12]="BETA_AZIMUTH"
+        header1[13]="GAMMA_AZIMUTH"
+           
+        break
+
+    for row in reader2:
+         header2 = reader2.fieldnames
+         del header2[8:len(header2)]
+         header2[1]="Tower Type"
+         header2[2]="1800alpha"
+         header2[3]="1800beta"
+         header2[4]="1800gamma"
+         header2[5]="1800 ALPHA_ANTENNA_HIGHT"
+         header2[6]="1800 BETA_ANTENNA_HIGHT"
+         header2[7]="1800 GAMMA_ANTENNA_HIGHT"
+         break
+
+    for row in reader3:
+         header3 = reader3.fieldnames
+         del header3[8:len(header3)]
+         header3[1]="Tower Type"
+         header3[2]="850alpha"
+         header3[3]="850beta"
+         header3[4]="850gamma"
+         header3[5]="850 ALPHA_ANTENNA_HIGHT"
+         header3[6]="850 BETA_ANTENNA_HIGHT"
+         header3[7]="850 GAMMA_ANTENNA_HIGHT"
+         break
+
+with open('t1.csv','wb')as band1,open ('t2.csv','wb') as band2,open ('t3.csv','wb') as band3:    
+    writer1 = csv.DictWriter(band1, fieldnames= header1)
+    writer1.writeheader()
+    writer2 = csv.DictWriter(band2, fieldnames= header2)
+    writer2.writeheader()
+    writer3 = csv.DictWriter(band3, fieldnames= header3)
+    writer3.writeheader()
+    
+    
+print "band wise rf parametric dump generation started.........."
+with open('2300.csv','r')as band1,open('t1.csv','ab')as nband1:
+    writer1 = csv.writer(nband1)    
+    for row in csv.reader(band1):
+        if row[0]=="sap_id":
+            continue
+        if multi.match(row[8])or mb1.match(row[8]) or mb2.match(row[8]):
+            row[2] = "MB"
+        elif pb.match(row[8])or pb1.match(row[8])or pb2.match(row[8]):
+            row[2] = "PB"
+        elif bsa.match(row[8])or bisec.match(row[8]):
+            row[2] = "2300 BSA"
+        elif NA1.match(row[8]) or NA2.match(row[8]):
+            row[2] = "NA"
+        elif boom.match(row[8]):
+            row[2] = "2300 Tboom"
+        else :
+            row[2] = "2300 SB"
+
+
+        if multi.match(row[9])or mb1.match(row[9]) or mb2.match(row[9]):
+            row[3] = "MB"
+        elif pb.match(row[9])or pb1.match(row[9])or pb2.match(row[9]):
+            row[3] = "PB"
+        elif bsa.match(row[9])or bisec.match(row[9]):
+            row[3] = "2300 BSA"
+        elif NA1.match(row[9]) or NA2.match(row[9]):
+            row[3] = "NA"
+        elif boom.match(row[9]):
+            row[3] = "2300 Tboom"
+        else :
+            row[3] = "2300 SB"
+
+        if multi.match(row[10])or mb1.match(row[10]) or mb2.match(row[10]):
+            row[4] = "MB"
+        elif pb.match(row[10])or pb1.match(row[10])or pb2.match(row[10]):
+            row[4] = "PB"
+        elif bsa.match(row[10])or bisec.match(row[10]):
+            row[4] = "2300 BSA"
+        elif NA1.match(row[10])or NA2.match(row[10]):
+            row[4] = "NA"
+        elif boom.match(row[10]):
+            row[4] = "2300 Tboom"
+        else :
+            row[4] = "2300 SB"
+        if multi.match(row[11])or mb1.match(row[11]) or mb2.match(row[1]):
+            row[5] = "MB"
+        elif pb.match(row[11])or pb1.match(row[11])or pb2.match(row[11]):
+            row[5] = "PB"
+        elif bsa.match(row[11])or bisec.match(row[11]):
+            row[5] = "2300 BSA"
+        elif NA1.match(row[11]) or NA2.match(row[11]):
+            row[5] = "NA"
+        elif boom.match(row[11]):
+            row[5] = "2300 Tboom"
+        else :
+            row[5] = "2300 SB"
+
+
+        if multi.match(row[12])or mb1.match(row[12]) or mb2.match(row[12]):
+            row[6] = "MB"
+        elif pb.match(row[12])or pb1.match(row[12])or pb2.match(row[12]):
+            row[6] = "PB"
+        elif bsa.match(row[12])or bisec.match(row[12]):
+            row[6] = "2300 BSA"
+        elif NA1.match(row[12]) or NA2.match(row[12]):
+            row[6] = "NA"
+        elif boom.match(row[12]):
+            row[6] = "2300 Tboom"
+        else :
+            row[6] = "2300 SB"
+
+        if multi.match(row[13])or mb1.match(row[13]) or mb2.match(row[13]):
+            row[7] = "MB"
+        elif pb.match(row[13])or pb1.match(row[13])or pb2.match(row[13]):
+            row[7] = "PB"
+        elif bsa.match(row[13])or bisec.match(row[13]):
+            row[7] = "2300 BSA"
+        elif NA1.match(row[13])or NA2.match(row[13]):
+            row[7] = "NA"
+        elif boom.match(row[13]):
+            row[7] = "2300 Tboom"
+        else :
+            row[7] = "2300 SB"
+
+        newcol = [row[14],row[15],row[16],row[20],row[21],row[22]]
+        writer1.writerow(row[:8]+newcol)
+
+        
+        
+with open ('1800.csv','r') as band2,open ('t2.csv','ab') as nband2:
+    writer2 = csv.writer(nband2)
+    for row in csv.reader(band2):
+        if row[0]=="sap_id":
+            continue
+        if multi.match(row[5])or mb1.match(row[5]) or mb2.match(row[5]):
+            row[2] = "MB"
+        elif pb.match(row[5])or pb1.match(row[5])or pb2.match(row[5]):
+            row[2] = "PB"
+        elif NA1.match(row[5])or NA2.match(row[5]):
+            row[2] = "NA"
+        else :
+            row[2] = "1800 SB"
+
+
+        if multi.match(row[6])or mb1.match(row[6]) or mb2.match(row[6]):
+            row[3] = "MB"
+        elif pb.match(row[6])or pb1.match(row[6])or pb2.match(row[6]):
+            row[3] = "PB"
+        elif NA1.match(row[6])or NA2.match(row[6]):
+            row[3] = "NA"
+        else :
+            row[3] = "1800 SB"
+
+        if multi.match(row[7])or mb1.match(row[7]) or mb2.match(row[7]):
+            row[4] = "MB"
+        elif pb.match(row[7])or pb1.match(row[7])or pb2.match(row[7]):
+            row[4] = "PB"
+        elif NA1.match(row[7])or NA2.match(row[7]):
+            row[4] = "NA"
+        else :
+            row[4] = "1800 SB" 
+        
+        try:
+            newcol2=[row[8],row[9],row[10]]
+            writer2.writerow(row[:5]+newcol2)
+        except (IndexError):
+            pass
+with open ('850.csv','r') as band3,open ('t3.csv','ab') as nband3:
+    writer3 = csv.writer(nband3)
+    for row in csv.reader(band3):
+        if row[0]=="sap_id":
+            continue
+        if pb.match(row[5])or pb1.match(row[5])or pb2.match(row[5]):
+            row[2] = "PB"
+        elif bsa.match(row[5])or bisec.match(row[5])or bsa2.match(row[5])or bsa3.match(row[5])or bsa4.match(row[5]):
+            row[2] = "850 BSA"
+        elif NA1.match(row[5])or NA2.match(row[5]):
+            row[2] = "NA"
+        elif hg1.match(row[5])or hg2.match(row[5])or hg3.match(row[5])or hg4.match(row[5])or hg5.match(row[5])or hg6.match(row[5])or hg7.match(row[5]):
+            row[2] = "850 SB High Gain"
+        elif (lg1.match(row[5])) or (lg2.match(row[5])) or (lg3.match(row[5])) or (lg4.match(row[5])):
+            row[2] = "850 SB Low Gain"
+        else :
+            row[2] = "850 SB"
+
+
+        if pb.match(row[6])or pb1.match(row[6])or pb2.match(row[6]):
+            row[3] = "PB"
+        elif bsa.match(row[6])or bisec.match(row[6])or bsa2.match(row[6])or bsa3.match(row[6])or bsa4.match(row[6]):
+            row[3] = "850 BSA"
+        elif NA1.match(row[6])or NA2.match(row[6]):
+            row[3] = "NA"
+        elif hg1.match(row[6])or hg2.match(row[6])or hg3.match(row[6])or hg4.match(row[6])or hg5.match(row[6])or hg6.match(row[6])or hg7.match(row[6]):
+            row[3] = "850 SB High Gain"
+        elif lg1.match(row[6])or lg2.match(row[6])or lg3.match(row[6])or lg4.match(row[6]):
+            row[3] = "850 SB Low Gain"
+       
+        else :
+            row[3] = "850 SB"
+
+        if (pb.match(row[7])) or (pb1.match(row[7])) or (pb2.match(row[7])):
+            row[4] = "PB"
+        elif bsa.match(row[7])or bisec.match(row[7])or bsa2.match(row[7])or bsa3.match(row[7])or bsa4.match(row[7]):
+            row[4] = "850 BSA"
+        elif NA1.match(row[7])or NA2.match(row[7]):
+            row[4] = "NA"
+        elif hg1.match(row[7])or hg2.match(row[7])or hg3.match(row[7])or hg4.match(row[7])or hg5.match(row[7])or hg6.match(row[7])or hg7.match(row[7]):
+            row[4] = "850 SB High Gain"
+        elif lg1.match(row[7])or lg2.match(row[7])or lg3.match(row[7])or lg4.match(row[7]):
+            row[4] = "850 SB Low Gain"            
+        else :
+            row[4] = "850 SB"
+        try:
+            newcol3=[row[8],row[9],row[10]]
+            writer3.writerow(row[:5]+newcol3)
+        except (IndexError):            
+            pass
+    print"Bandwise rf dump generation completed!!!!!"
+
