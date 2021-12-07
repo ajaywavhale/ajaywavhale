@@ -1,0 +1,9 @@
+import xml.etree.ElementTree as ET
+tree = ET.parse("C:/Users]Multi_CarrierFinal.xml")
+root = tree.getroot()
+input=raw_input
+cmd=str(input("Enter a command:"))
+command="{CPS-ENB}"+cmd  
+path = ".//"+command+"/{CPS-ENB}attributes"
+for child in root.findall(path):
+    print child.tag
