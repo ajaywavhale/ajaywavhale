@@ -1,0 +1,19 @@
+x = [1:1:10];
+y = (0.06/8)*x+0.0008
+plot(x, y), xlabel('g'), ylabel('PC Output'), title('Graph'),
+grid on
+
+x = [0.1:0.1:1];
+y = (0.06/0.8)*x+0.0008
+plot(x, y), xlabel('k'), ylabel('PC Output'), title('Graph'),
+grid on
+
+x = [1:1:10];
+y = (0.02/5)*x+0.0008
+plot(x, y), xlabel('g'), ylabel('BSC Output'), title('Graph'),
+grid on
+
+x = [0.1:0.1:1];
+y = [0.4 0.41 0.411 0.412 0.416 0.418 0.423 0.434 0.44 0.45]
+plot(x, y), xlabel('k'), ylabel('BSC Output'), title('Graph'),
+grid on,axis([0.1 1 0 0.45])
